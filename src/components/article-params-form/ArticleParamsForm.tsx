@@ -15,45 +15,41 @@ import {
   ArticleStateType,
 } from 'src/constants/articleProps';
 import styles from './ArticleParamsForm.module.scss';
+import clsx from 'clsx';
 
-export const ArticleParamsForm = () => {
-  const [isOpen, setIsOpen] = useState(false);
+// Добавляем типы пропсов
+interface ArticleParamsFormProps {
+  applyStyles: (state: ArticleStateType) => void;
+  articleState: ArticleStateType;
+}
+
+export const ArticleParamsForm = ({ applyStyles, articleState }: ArticleParamsFormProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const asideRef = useRef<HTMLDivElement>(null);
 
   // Независимое состояние формы
-  const [formState, setFormState] = useState<ArticleStateType>(defaultArticleState);
+  const [formState, setFormState] = useState<ArticleStateType>(articleState);
   // Состояние применённых настроек (для сброса)
-  const [appliedState, setAppliedState] = useState<ArticleStateType>(defaultArticleState);
+  const [appliedState, setAppliedState] = useState<ArticleStateType>(articleState);
 
   // Закрытие по клику вне aside
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isMenuOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (asideRef.current && !asideRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        setIsMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
-
-  // Применение настроек к CSS-переменным
-  const applyStyles = (state: ArticleStateType) => {
-    const root = document.querySelector('main');
-    if (!root) return;
-    root.style.setProperty('--font-family', state.fontFamilyOption.value);
-    root.style.setProperty('--font-size', state.fontSizeOption.value);
-    root.style.setProperty('--font-color', state.fontColor.value);
-    root.style.setProperty('--container-width', state.contentWidth.value);
-    root.style.setProperty('--bg-color', state.backgroundColor.value);
-  };
+  }, [isMenuOpen]);
 
   // Применить
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
     setAppliedState(formState);
     applyStyles(formState);
-    setIsOpen(false);
+    setIsMenuOpen(false);
   };
 
   // Сбросить
@@ -67,17 +63,17 @@ export const ArticleParamsForm = () => {
 
   // Открытие панели — сбрасываем форму к применённым настройкам
   useEffect(() => {
-    if (isOpen) {
+    if (isMenuOpen) {
       setFormState(appliedState);
     }
-  }, [isOpen, appliedState]);
+  }, [isMenuOpen, appliedState]);
 
   return (
     <>
-      <ArrowButton isOpen={isOpen} onClick={() => setIsOpen((prev) => !prev)} />
+      <ArrowButton isOpen={isMenuOpen} onClick={() => setIsMenuOpen((prev) => !prev)} />
       <aside
         ref={asideRef}
-        className={isOpen ? `${styles.container} ${styles.container_open}` : styles.container}
+        className={clsx(styles.container, { [styles.container_open]: isMenuOpen })}
       >
         <form className={styles.form} onSubmit={handleApply} onReset={handleReset}>
           <div style={{ marginBottom: 24 }}>
